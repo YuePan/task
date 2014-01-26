@@ -14,8 +14,15 @@ BING_Key = "Lk/BUx4rCRwLfX/Ti0ArjKvgwn3AS7+mXmUfCyjpNcM"
 
 
 
-class MainHandler(tornado.web.RequestHandler):
+class BaseHandler(tornado.web.RequestHandler):
 
+    def get_current_user(self):
+        return self.get_secure_cookie("user")
+
+
+
+
+class MainHandler(BaseHandler):
 
     def get(self, path):
         print("path=%s" % path)
@@ -24,7 +31,17 @@ class MainHandler(tornado.web.RequestHandler):
 
 
 
-class DataHandler(tornado.web.RequestHandler):
+class LoginHandler(BaseHandler):
+
+    def post(self):
+        name = self.get_argument("name")
+        self.set_secure_cookie("user", name)
+        self.write({"name":name})
+
+
+
+
+class DataHandler(BaseHandler):
 
     def get(self, path):
         value = self.get_argument("value")
@@ -45,7 +62,7 @@ class DataHandler(tornado.web.RequestHandler):
 
 
 
-class TaskHandler(tornado.web.RequestHandler):
+class TaskHandler(BaseHandler):
 
     def get(self, task):
         pass
@@ -53,13 +70,13 @@ class TaskHandler(tornado.web.RequestHandler):
 
 
 
-class SearchHandler(tornado.web.RequestHandler):
+class SearchHandler(BaseHandler):
 
     @tornado.web.asynchronous
     def get(self, params):
         query = self.get_argument("query")
         print("SearchHandler, query=%s" % query)
-        if not (query is None) and query != "":
+        if query:
             http = tornado.httpclient.AsyncHTTPClient()
             request = tornado.httpclient.HTTPRequest(
                 BING_Request % tornado.escape.url_escape(query),
@@ -68,18 +85,25 @@ class SearchHandler(tornado.web.RequestHandler):
             http.fetch(request, callback=self.on_response)
             print("Request: " + BING_Request % query)
         else:
-            self.render("serp.html", steps=[], items=[])
+            self.render("serp.html",
+                        user=self.current_user,
+                        steps=[],
+                        items=[])
 
 
     def on_response(self, response):
-        if response.error: raise tornado.web.HTTPError(500)
+        if response.error:
+            raise tornado.web.HTTPError(500)
         json = tornado.escape.json_decode(response.body)
         items = json['d']['results']
         print("Fetched " + str(len(items)) + " results from Bing Web Search")
         steps = [{"Id":"11", "Title":"Step 1", "Content":"bala, bala1"},
                  {"Id":"12", "Title":"Step 2", "Content":"bala, bala2"},
                  {"Id":"13", "Title":"Step 3", "Content":"bala, bala3"}]
-        self.render("serp.html", steps=steps, items=items)
+        self.render("serp.html",
+                    user=self.current_user,
+                    steps=steps,
+                    items=items)
         #self.finish()
 
 
@@ -88,7 +112,7 @@ class SearchHandler(tornado.web.RequestHandler):
 application = tornado.web.Application([
     (r"/search?(.+)", SearchHandler),
     (r"/data/(.*)", DataHandler),
-    (r"/(.+)", MainHandler),
+    (r"(.*)", MainHandler),
 ])
 
 

@@ -2,6 +2,34 @@
 {% block content %}
 <script type=text/javascript>
   $(function() {
+    $("#log-in).dialog({
+      autoOpen: false,
+      height: 100, 
+      width: 200, 
+      modal: true,
+      buttons: {
+          "Sign in/up": function() {
+              var bValid = true;
+              bValid = bValid && name.val().length > 1;
+              if (bValid) {
+                  $.ajax({
+                      type: "POST",
+                      url: "/login",
+                      contentType: "application/json; charset=utf-8",
+                      data: { name: $('input[name="name"]').val() },
+                      success: function(data) {
+                          $('#user').text(data.name);
+                      }
+                    });
+              };
+              $( this ).dialog( "close" );
+          },
+          "Cancel": function() {
+              $( this ).dialog( "close" );
+          }
+      }
+    });
+
     $("#submit").click(function() {
         $.ajax({
             type: "GET",
@@ -11,9 +39,6 @@
             success: function(data) {
                 if (data.redirect) {
                     window.location.href = data.redirect;
-                }
-                else {
-                    $('#echoResult').text(data.value);
                 }
             },
             error: function(xhr, status, e) {
@@ -44,14 +69,34 @@
 
 </script>
 
-<h2>Bing Task</h2><br />
-<input type='text' size='50' id='query' name='query' class='input'>
-<button type='button' id='submit' name='submit' class='input'>
-    <strong><big>Search</big></strong>
-</button>
-<br /><br />
+<div id='top'>
+  <h2>Bing Task</h2>
+  <span id="user">
+    {% if user %}
+        {{ user }} 
+    {% else %}
+        Log in    
+    {% end %}
+  </span><br />
+  <div id="log-in" title="Log in">
+    <form>
+        <label for="name">Name</label>
+        <input type="text" name="name" id="name">
+    </form>
+  </div>
+  <br />
+</div>
+
+<div id='search'>
+    <input type='text' size='50' id='query' name='query' class='input'>
+    <button type='button' id='submit' name='submit' class='input'>
+        <strong><big>Search</big></strong>
+    </button>
+    <br /><br />
+</div>
 
 <div id='task' style='font-size: 62.5%'>
+  {% if len(steps) > 0 %}    
     <strong>Task invoked</strong><br />
     <ul>
       {% for step in steps %}
@@ -60,12 +105,12 @@
         </a></li>
       {% end %}
     </ul>
-  {% for step in steps %}
-    <div id='{{ escape(step["Id"]) }}'>
-        <p>{{ escape(step["Content"]) }}</p>
-    </div>
+    {% for step in steps %}
+      <div id='{{ escape(step["Id"]) }}'>
+      <p>{{ escape(step["Content"]) }}</p>
+      </div>
+    {% end %}
   {% end %}
-    <p id='echoResult'></p><br />
 </div>
 
 <div id='searchResults'>
