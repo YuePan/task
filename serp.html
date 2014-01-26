@@ -2,23 +2,31 @@
 {% block content %}
 <script type=text/javascript>
   $(function() {
-    $("#log-in).dialog({
+    $("#user").click(function() {
+        $("#log-in").dialog( "open" );
+    });
+
+    $("#log-in").dialog({
       autoOpen: false,
-      height: 100, 
-      width: 200, 
+      height: 200, 
+      width: 400, 
       modal: true,
       buttons: {
           "Sign in/up": function() {
               var bValid = true;
-              bValid = bValid && name.val().length > 1;
+              var username = $('input[name="username"]').val();
+              bValid = bValid && username.length > 1;
               if (bValid) {
                   $.ajax({
-                      type: "POST",
+                      type: "GET",
                       url: "/login",
                       contentType: "application/json; charset=utf-8",
-                      data: { name: $('input[name="name"]').val() },
+                      data: { value: username },
                       success: function(data) {
                           $('#user').text(data.name);
+                      },
+                      error: function(xhr, status, e) {
+                          alert('Ajax error: ' + status);
                       }
                     });
               };
@@ -42,7 +50,7 @@
                 }
             },
             error: function(xhr, status, e) {
-                alert('An error occured: ' + status);
+                alert('Ajax error: ' + status);
             },
         });     
     });
@@ -70,18 +78,19 @@
 </script>
 
 <div id='top'>
-  <h2>Bing Task</h2>
-  <span id="user">
+    <span class='input' style='float: left'><big>Bing Task</big></span>
+  <a href="#" id="user" style='float: right'>
     {% if user %}
         {{ user }} 
     {% else %}
         Log in    
     {% end %}
-  </span><br />
+  </a><br />
   <div id="log-in" title="Log in">
     <form>
-        <label for="name">Name</label>
-        <input type="text" name="name" id="name">
+        <br />
+        <label for="username">Name: </label>
+        <input type="text" name="username" id="username">
     </form>
   </div>
   <br />

@@ -33,8 +33,9 @@ class MainHandler(BaseHandler):
 
 class LoginHandler(BaseHandler):
 
-    def post(self):
-        name = self.get_argument("name")
+    def get(self):
+        name = self.get_argument("value")
+        print("LoginHandler, name=%s" % name)
         self.set_secure_cookie("user", name)
         self.write({"name":name})
 
@@ -110,10 +111,11 @@ class SearchHandler(BaseHandler):
 
 
 application = tornado.web.Application([
+    (r"/login", LoginHandler),
     (r"/search?(.+)", SearchHandler),
     (r"/data/(.*)", DataHandler),
     (r"(.*)", MainHandler),
-])
+], cookie_secret="secret cookie")
 
 
 
