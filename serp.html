@@ -3,7 +3,6 @@
 <script type=text/javascript>
   $(function() {
     $("#submit").click(function() {
-        alert("submit")
         $.ajax({
             type: "GET",
             url: "/data/a",
@@ -39,6 +38,8 @@
     });
 
     $("#task").tabs();
+
+    $("#query").focus();
   });
 
 </script>
