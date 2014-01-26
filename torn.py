@@ -7,7 +7,7 @@ import tornado.escape
 
 
 BING_Request = "https://api.datamarket.azure.com/Bing/Search/Web?"\
-        "Query=%%27%s%%27&$top=10&$format=json"
+        "Query=%%27%s%%27&Market=en-US&$top=10&$format=json"
 
 BING_Key = "Lk/BUx4rCRwLfX/Ti0ArjKvgwn3AS7+mXmUfCyjpNcM"
 
@@ -38,7 +38,7 @@ class DataHandler(tornado.web.RequestHandler):
             ret_data = {"value": value}
         else:
             re = self.request
-            ret_data = {"redirect": re.protocol + "://" + 
+            ret_data = {"redirect": re.protocol + "://" +
                     re.host + "/search?query=" + value}
         self.write(ret_data)
 
@@ -81,7 +81,7 @@ class SearchHandler(tornado.web.RequestHandler):
                  {"Id":"13", "Title":"Step 3", "Content":"bala, bala3"}]
         self.render("serp.html", steps=steps, items=items)
         #self.finish()
-        
+
 
 
 
