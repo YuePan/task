@@ -2,8 +2,9 @@
 {% block content %}
 <script type=text/javascript>
   $(function() {
-    $("#submitBtn").click(function() {
-         $.ajax({
+    $("#submit").click(function() {
+        alert("submit")
+        $.ajax({
             type: "GET",
             url: "/data/a",
             contentType: "application/json; charset=utf-8",
@@ -22,6 +23,12 @@
         });     
     });
 
+    $("#query").keyup(function(event) {
+        if(event.keyCode ==13){
+            $("#submit").trigger("click");
+        }
+    });
+
     var availableTags = [
         "ts:action_1",
         "ts:action_2",
@@ -37,8 +44,8 @@
 </script>
 
 <h2>Bing Task</h2><br />
-<big><input type='text' size='50' id='query' name='query'></big>
-<button type='button' id='submitBtn' name='submitBtn'>
+<input type='text' size='50' id='query' name='query' class='input'>
+<button type='button' id='submit' name='submit' class='input'>
     <strong><big>Search</big></strong>
 </button>
 <br /><br />
