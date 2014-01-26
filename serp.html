@@ -1,0 +1,75 @@
+{% extends "layout.html" %}
+{% block content %}
+<script type=text/javascript>
+  $(function() {
+    $("#submitBtn").click(function() {
+         $.ajax({
+            type: "GET",
+            url: "/data/a",
+            contentType: "application/json; charset=utf-8",
+            data: { value: $('input[name="query"]').val() },
+            success: function(data) {
+                if (data.redirect) {
+                    window.location.href = data.redirect;
+                }
+                else {
+                    $('#echoResult').text(data.value);
+                }
+            },
+            error: function(xhr, status, e) {
+                alert('An error occured: ' + status);
+            },
+        });     
+    });
+
+    var availableTags = [
+        "ts:action_1",
+        "ts:action_2",
+        "ts:action_3"
+    ];
+    $("#query").autocomplete({
+      source: availableTags
+    });
+
+    $("#task").tabs();
+  });
+
+</script>
+
+<h2>Bing Task</h2><br />
+<big><input type='text' size='50' id='query' name='query'></big>
+<button type='button' id='submitBtn' name='submitBtn'>
+    <strong><big>Search</big></strong>
+</button>
+<br /><br />
+
+<div id='task' style='font-size: 62.5%'>
+    <strong>Task invoked</strong><br />
+    <ul>
+      {% for step in steps %}
+        <li><a href='#{{ escape(step["Id"]) }}'>
+            {{ escape(step["Title"]) }}
+        </a></li>
+      {% end %}
+    </ul>
+  {% for step in steps %}
+    <div id='{{ escape(step["Id"]) }}'>
+        <p>{{ escape(step["Content"]) }}</p>
+    </div>
+  {% end %}
+    <p id='echoResult'></p><br />
+</div>
+
+<div id='searchResults'>
+  <p style='color: grey'> {{ len(items) }} search results </p>
+  {% for item in items %}
+    <p>
+      <a href='{{ escape(item["Url"]) }}'>
+          {{ escape(item["Title"]) }}
+      </a><br />
+      <span style="color: green">{{ escape(item["DisplayUrl"]) }} </span><br />
+      <small>{{ escape(item["Description"]) }}</small><br />
+    </p>
+  {% end %}
+</div>
+{% end %}
