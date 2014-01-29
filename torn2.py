@@ -80,9 +80,9 @@ class SearchHandler(BaseHandler):
             json = tornado.escape.json_decode(response.body)
             items = json['d']['results']
             print("Fetched " + str(len(items)) + " results from Bing Web Search")
-            steps = [{"Id":"11", "Title":"Step 1", "Content":"bala, bala1"},
-                    {"Id":"12", "Title":"Step 2", "Content":"bala, bala2"},
-                    {"Id":"13", "Title":"Step 3", "Content":"bala, bala3"}]
+            steps = [{"Id":"11", "Title":"Micro task 1", "Content":"bala, bala1"},
+                    {"Id":"12", "Title":"Micro task 2", "Content":"bala, bala2"},
+                    {"Id":"13", "Title":"Micro task 3", "Content":"bala, bala3"}]
             self.render("serp.html",
                         user=self.current_user,
                         steps=steps,

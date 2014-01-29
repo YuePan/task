@@ -1,8 +1,10 @@
+import tornado.gen
 import tornado.ioloop
 import tornado.web
 import tornado.httpclient
 import tornado.escape
 import task_engine
+import intent_detector
 
 
 BING_Request = "https://api.datamarket.azure.com/Bing/SearchWeb/v1/Web?"\
@@ -64,19 +66,25 @@ class DataHandler(BaseHandler):
 
 class TaskHandler(BaseHandler):
 
+    @tornado.gen.coroutine
     def get(self, task):
         task = self.get_argument("task")
         micro = self.get_argument("micro")
         method = self.get_argument("method")
-        operators = task_engine.get_ops(task, micro, method)
-        self.write(operators)
+        task_desc = yield task_engine.get_desc(task, micro, method)
+        self.set_secure_cookie(micro, method)
+        self.render('task.html', 
+                task=task_desc["task"],
+                micros=task_desc["micros"],
+                methods=task_desc["methods"],
+                ops=task_desc["ops"])
 
 
 
 
 class SearchHandler(BaseHandler):
 
-    @tornado.web.asynchronous
+    @tornado.gen.coroutine
     def get(self, params):
         query = self.get_argument("query")
         print("SearchHandler, query=%s" % query)
@@ -86,29 +94,27 @@ class SearchHandler(BaseHandler):
                 BING_Request % tornado.escape.url_escape(query),
                 auth_username=BING_Key,
                 auth_password=BING_Key)
-            http.fetch(request, callback=self.on_response)
+            response = yield http.fetch(request)
             print("Request: " + BING_Request % query)
-        else:
+            if response.error:
+                raise tornado.web.HTTPError(500)
+            json = tornado.escape.json_decode(response.body)
+            items = json['d']['results']
+            print("Fetched " + str(len(items)) + " results from Bing Web Search")
+            task = intent_detector.get_task(query, items)
+            task_desc = yield task_engine.get_desc(task)
             self.render("serp.html",
                         user=self.current_user,
-                        steps=[],
-                        items=[])
+                        task=task_desc["task"],
+                        micros=task_desc["micros"],
+                        methods=task_desc["methods"],
+                        ops=task_desc["ops"],
+                        items=items)
+        else:
+            self.render("serp.html",
+                        user=self.current_user, items=[],
+                        task=None, micros=[], methods=[], ops={})
 
-
-    def on_response(self, response):
-        if response.error:
-            raise tornado.web.HTTPError(500)
-        json = tornado.escape.json_decode(response.body)
-        items = json['d']['results']
-        print("Fetched " + str(len(items)) + " results from Bing Web Search")
-        steps = [{"Id":"11", "Title":"Step 1", "Content":"bala, bala1"},
-                 {"Id":"12", "Title":"Step 2", "Content":"bala, bala2"},
-                 {"Id":"13", "Title":"Step 3", "Content":"bala, bala3"}]
-        self.render("serp.html",
-                    user=self.current_user,
-                    steps=steps,
-                    items=items)
-        #self.finish()
 
 
 
