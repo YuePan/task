@@ -35,7 +35,7 @@ class MainHandler(BaseHandler):
 class LoginHandler(BaseHandler):
 
     def get(self):
-        name = self.get_argument("value")
+        name = self.get_argument("name")
         print("LoginHandler, name=%s" % name)
         self.set_secure_cookie("user", name)
         self.write({"name":name})
@@ -70,14 +70,22 @@ class TaskHandler(BaseHandler):
     def get(self, task):
         task = self.get_argument("task")
         micro = self.get_argument("micro")
+        microidx = int(micro) if micro else 0
         method = self.get_argument("method")
-        task_desc = yield task_engine.get_desc(task, micro, method)
-        self.set_secure_cookie(micro, method)
+        methodidx = int(method) if method else 0
+        query = self.get_argument("query")
+        print("TaskHandler, task micro method=", task, microidx, methodidx)
+        if not task:
+            task = intent_detector.get_task(query, [])
+        task_desc = yield task_engine.get_desc(task, microidx, methodidx)
+        self.set_secure_cookie(str(microidx), method)
         self.render('task.html', 
                 task=task_desc["task"],
                 micros=task_desc["micros"],
                 methods=task_desc["methods"],
-                ops=task_desc["ops"])
+                ops=task_desc["ops"],
+                active_micro=microidx,
+                active_method=methodidx)
 
 
 
@@ -101,19 +109,22 @@ class SearchHandler(BaseHandler):
             json = tornado.escape.json_decode(response.body)
             items = json['d']['results']
             print("Fetched " + str(len(items)) + " results from Bing Web Search")
-            task = intent_detector.get_task(query, items)
-            task_desc = yield task_engine.get_desc(task)
+            #task = intent_detector.get_task(query, items)
+            #task_desc = yield task_engine.get_desc(task)
             self.render("serp.html",
                         user=self.current_user,
-                        task=task_desc["task"],
-                        micros=task_desc["micros"],
-                        methods=task_desc["methods"],
-                        ops=task_desc["ops"],
+                        #task=task_desc["task"],
+                        #micros=task_desc["micros"],
+                        #methods=task_desc["methods"],
+                        #ops=task_desc["ops"],
+                        #iactive_micro=micro,
+                        #active_method=method,
                         items=items)
         else:
             self.render("serp.html",
-                        user=self.current_user, items=[],
-                        task=None, micros=[], methods=[], ops={})
+                        user=self.current_user, items=[])
+                        #task=None, micros=[], methods=[], ops={})
+                        #active_micro=-1, active_method=None)
 
 
 
@@ -122,7 +133,7 @@ class SearchHandler(BaseHandler):
 application = tornado.web.Application([
     (r"/login", LoginHandler),
     (r"/search?(.+)", SearchHandler),
-    (r"/task?(.+)", TaskHandler),
+    (r"/task(.*)", TaskHandler),
     (r"/data/(.*)", DataHandler),
     (r"(.*)", MainHandler),
 ], cookie_secret="secret cookie")

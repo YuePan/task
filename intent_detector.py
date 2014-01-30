@@ -4,7 +4,7 @@ Dummy implementation.
 
 """
 
-def get_task(query, items):
+def get_task(query, items=[]):
     return "task:back_home"
 
 

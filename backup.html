@@ -1,6 +1,7 @@
+
 {% if task %}   
     <div id='task_progress'>
-        <span id='task_id' style='float: left'>{{ escape(task) }}</span>: 
+        <span style='float: left' id='task_id'>{{ escape(task) }}</span>: 
         <span id='task_prog' class='progress-label' style='float: left;'></span>
         <select id='method_id' name='Method' style='float: right'>
         {% for method in methods %}
@@ -13,14 +14,14 @@
     <div id='micro_id' style='font-size: 62.5%'>
         <ul>
         {% for micro in micros %}
-            <li>
-              <a href='#{{ escape(micro) }}'>{{ escape(micro) }}</a>
-            </li>
+            <li><a href='#{{ escape(micro) }}'>
+                {{ escape(micro) }}
+            </a></li>
         {% end %}
         </ul>
         {% for micro in micros %}
         <div id='{{ escape(micro) }}'>
-        {% for op in ops %}    
+        {% for op in ops %}
             <p>{{ escape(op) }}</p>
         {% end %}
         </div>
