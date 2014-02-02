@@ -46,19 +46,22 @@ class LoginHandler(BaseHandler):
 class DataHandler(BaseHandler):
 
     def get(self, path):
-        value = self.get_argument("value")
-        print("DataHandler, value=%s" % value)
+        query = self.get_argument("query")
+        print("DataHandler, query=%s" % query)
 
-        isTask = False
-        if value.find("ts:") == 0:
-            isTask = True
-
-        if (isTask):
-            ret_data = {"value": value}
+        task = ""
+        terms = query.split()
+        for term in terms:
+            t = term.lower()
+            if t.startswith("ta:"):
+                task = t[3:]
+                break
+        if task:
+            ret_data = {"task": task}
         else:
             re = self.request
             ret_data = {"redirect": re.protocol + "://" +
-                    re.host + "/search?query=" + value}
+                    re.host + "/search?query=" + query}
         self.write(ret_data)
 
 
@@ -78,8 +81,11 @@ class TaskHandler(BaseHandler):
         if not task:
             task = intent_detector.get_task(query, [])
         task_desc = yield task_engine.get_desc(task, microidx, methodidx)
-        self.set_secure_cookie(str(microidx), method)
-        self.render('task.html', 
+        if not task_desc:
+            self.send_error(400, reason="task not supported yet")
+        else:
+            self.set_secure_cookie(str(microidx), method)
+            self.render('task.html', 
                 task=task_desc["task"],
                 micros=task_desc["micros"],
                 methods=task_desc["methods"],

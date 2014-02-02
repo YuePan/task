@@ -39,16 +39,13 @@ $(document).ready(function() {
     });
 
     var LoadTask = function(task_id, micro_id, method_id) { 
-        var task_id = $("#task_id").text();
-        var query = $('input[name="query"]').val();
-        if (task_id.length > 0) {
-            if (micro_id > 0) {
-                micro_id = $("#micro_id").tabs("option", "active");
-                if (method_id  > 0) {
-                    method_id = $("#method_id").get(0).selectedIndex;
-                }
-            }
+        if (micro_id < 0) {
+            micro_id = $("#micro_id").tabs("option", "active");
         }
+        if (method_id  > 0) {
+            method_id = $("#method_id").get(0).selectedIndex;
+        }
+        var query = $('input[name="query"]').val();
         $.ajax({
             type: "GET",
             url: "/task/desc",
@@ -65,17 +62,16 @@ $(document).ready(function() {
                 $( "#micro_prog" ).progressbar({
                     value: 37
                 });
-                
                 $("#method_id").get(0).selectedIndex = method_id;        
                 $("#method_id").change(function() {
                     // so we assume we are in the same micro
-                    LoadTask("", 1, 1);
+                    LoadTask(task_id, micro_id, -1);
                 });
                 $("#micro_id").tabs({
                     active: micro_id,
                     collapsible: true,        
                     activate: function(event, ui) {
-                       LoadTask("", 1, 0);
+                       LoadTask(task_id, -1, 0);
                     }
                 });
             },
@@ -92,13 +88,13 @@ $(document).ready(function() {
             type: "GET",
             url: "/data/a",
             contentType: "application/json; charset=utf-8",
-            data: { value: $('input[name="query"]').val() },
+            data: { 'query': $('input[name="query"]').val() },
             success: function(data) {
                 if (data.redirect) {
                     window.location.href = data.redirect;
                 }
                 else {
-                    LoadTask("", 1, 1);
+                    LoadTask(data.task, 0, 0);
                 }
             },
             error: function(xhr, status, e) {

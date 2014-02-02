@@ -15,7 +15,11 @@ is not given, use the default method for the micro-task.
 def get_desc(task, microidx=0, methodidx=0): 
     c = tornadoredis.Client(connection_pool=CONNECTION_POOL)
 
+    is_task = yield gen.Task(c.sismember, 'tasks', task)
+    if not is_task:
+        return None;
     print("task=", task)
+
     micros = yield gen.Task(c.lrange, task + ':micros', 0, -1)
     micro = micros[microidx]
     print("micro=", micro)
